@@ -161,6 +161,10 @@ export default function TaskDetailScreen() {
             placeholderTextColor={palette.textSubtle}
             style={styles.titleInput}
             autoCapitalize="sentences"
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            scrollEnabled
           />
           <View>
             <View style={styles.descriptionRow}>
@@ -381,7 +385,10 @@ function createStyles(
       color: palette.text,
       fontSize: textSizes.title,
       fontWeight: "700",
-      paddingVertical: 2,
+      lineHeight: 30,
+      minHeight: 54,
+      maxHeight: 160,
+      paddingVertical: 6,
     },
     descriptionRow: {
       flexDirection: "row",
