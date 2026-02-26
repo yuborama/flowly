@@ -1,0 +1,61 @@
+import { Model } from '@nozbe/watermelondb';
+
+export class TaskModel extends Model {
+  static table = 'tasks';
+
+  get title(): string {
+    return this._getRaw('title') as string;
+  }
+
+  set title(value: string) {
+    this._setRaw('title', value);
+  }
+
+  get completed(): boolean {
+    return this._getRaw('completed') as boolean;
+  }
+
+  set completed(value: boolean) {
+    this._setRaw('completed', value);
+  }
+
+  get ownerId(): string {
+    return this._getRaw('owner_id') as string;
+  }
+
+  set ownerId(value: string) {
+    this._setRaw('owner_id', value);
+  }
+
+  get sharedWithRaw(): string {
+    return (this._getRaw('shared_with') as string) ?? '[]';
+  }
+
+  set sharedWithRaw(value: string) {
+    this._setRaw('shared_with', value);
+  }
+
+  get attachmentUri(): string | undefined {
+    return this._getRaw('attachment_uri') as string | undefined;
+  }
+
+  set attachmentUri(value: string | undefined) {
+    this._setRaw('attachment_uri', value ?? null);
+  }
+
+  get updatedAt(): number {
+    return this._getRaw('updated_at') as number;
+  }
+
+  set updatedAt(value: number) {
+    this._setRaw('updated_at', value);
+  }
+
+  get isSynced(): boolean {
+    return this._getRaw('is_synced') as boolean;
+  }
+
+  set isSynced(value: boolean) {
+    this._setRaw('is_synced', value);
+  }
+}
