@@ -1,19 +1,18 @@
-import { Database } from '@nozbe/watermelondb';
-import LokiJSAdapter from '@nozbe/watermelondb/adapters/lokijs';
+import { Database } from "@nozbe/watermelondb";
+import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite";
 
-import { FriendModel } from '@/lib/db/models/Friend';
-import { flowlyMigrations } from '@/lib/db/migrations';
-import { TaskModel } from '@/lib/db/models/Task';
-import { UserModel } from '@/lib/db/models/User';
-import { flowlySchema } from '@/lib/db/schema';
+import { flowlyMigrations } from "@/lib/db/migrations";
+import { FriendModel } from "@/lib/db/models/Friend";
+import { TaskModel } from "@/lib/db/models/Task";
+import { UserModel } from "@/lib/db/models/User";
+import { flowlySchema } from "@/lib/db/schema";
 
-const adapter = new LokiJSAdapter({
+const adapter = new SQLiteAdapter({
+  dbName: "flowly",
   schema: flowlySchema,
   migrations: flowlyMigrations,
-  useWebWorker: false,
-  useIncrementalIndexedDB: true,
   onSetUpError: (error) => {
-    console.warn('WatermelonDB setup error', error);
+    console.warn("WatermelonDB setup error (native/sqlite)", error);
   },
 });
 
