@@ -1,98 +1,541 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { AppPalette, TextSizes } from "@/constants/theme";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import { TaskFilter, useAppStore } from "@/store/app-store";
 
-export default function HomeScreen() {
+const FILTER_OPTIONS: {
+  value: TaskFilter;
+  title: string;
+  description: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  {
+    value: "all",
+    title: "All Tasks",
+    description: "Show everything in your workspace",
+    icon: "list",
+  },
+  {
+    value: "pending",
+    title: "Pending",
+    description: "Tasks currently in progress",
+    icon: "time-outline",
+  },
+  {
+    value: "completed",
+    title: "Completed",
+    description: "Recently finished items",
+    icon: "checkmark-done-circle-outline",
+  },
+  {
+    value: "shared",
+    title: "Shared with Friends",
+    description: "Tasks involving collaborators",
+    icon: "people-outline",
+  },
+];
+
+export default function DashboardScreen() {
+  const router = useRouter();
+  const { colors, palette, textSizes } = useAppTheme();
+  const styles = createStyles(palette, textSizes);
+
+  const friends = useAppStore((state) => state.friends);
+  const filteredTasks = useAppStore((state) => state.filteredTasks());
+  const currentFilter = useAppStore((state) => state.taskFilter);
+  const setTaskFilter = useAppStore((state) => state.setTaskFilter);
+  const toggleTask = useAppStore((state) => state.toggleTask);
+
+  const [draftFilter, setDraftFilter] = useState<TaskFilter>(currentFilter);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const sheetHeight = useSharedValue(0);
+  const openProgress = useSharedValue(0);
+  const progress = useDerivedValue(() =>
+    withTiming(openProgress.value, { duration: 320 }),
+  );
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: (1 - progress.value) * (sheetHeight.value + 56) },
+    ],
+  }));
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: progress.value * 0.58,
+    zIndex:
+      openProgress.value > 0
+        ? 10
+        : withDelay(320, withTiming(-1, { duration: 0 })),
+  }));
+
+  const openFilterSheet = () => {
+    setDraftFilter(currentFilter);
+    setIsSheetOpen(true);
+    openProgress.value = 1;
+  };
+
+  const closeFilterSheet = () => {
+    openProgress.value = 0;
+    setIsSheetOpen(false);
+  };
+
+  const applyFilter = () => {
+    setTaskFilter(draftFilter);
+    closeFilterSheet();
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.title}>My Tasks</Text>
+          <Text style={styles.subtitle}>
+            {filteredTasks.length} tasks for today
+          </Text>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.headerActions}>
+          <View style={styles.roundAction}>
+            <Ionicons name="search" size={28} color={colors.text} />
+          </View>
+          <Pressable onPress={openFilterSheet} style={styles.roundAction}>
+            <Ionicons name="options-outline" size={28} color={colors.text} />
+          </Pressable>
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.listContent}>
+        {filteredTasks.map((task) => (
+          <Pressable
+            key={task.id}
+            style={styles.taskCard}
+            onPress={() =>
+              router.push({ pathname: "/task/[id]", params: { id: task.id } })
+            }
+          >
+            <Pressable
+              onPress={(event) => {
+                event.stopPropagation();
+                void toggleTask(task.id);
+              }}
+              style={[styles.checkbox, task.completed && styles.checkboxDone]}
+            >
+              {task.completed ? (
+                <Ionicons name="checkmark" size={15} color={palette.text} />
+              ) : null}
+            </Pressable>
+
+            <View style={styles.taskMain}>
+              <Text
+                style={[
+                  styles.taskTitle,
+                  task.completed && styles.taskTitleDone,
+                ]}
+                numberOfLines={2}
+              >
+                {task.title}
+              </Text>
+              <Text style={styles.taskSubline}>
+                {task.completed ? "Completed today" : "Due soon"} •{" "}
+                {task.sharedWith.length > 0 ? "High Priority" : "Personal"}
+              </Text>
+
+              <View style={styles.cardDivider} />
+
+              <View style={styles.cardFooter}>
+                <View style={styles.avatarStack}>
+                  {task.sharedWith.slice(0, 2).map((friendId, index) => {
+                    const friend = friends.find((item) => item.id === friendId);
+                    const initial =
+                      friend?.name.slice(0, 1).toUpperCase() ?? "?";
+                    return (
+                      <View
+                        key={`${task.id}_${friendId}`}
+                        style={[
+                          styles.sharedAvatar,
+                          { marginLeft: index === 0 ? 0 : -9 },
+                        ]}
+                      >
+                        <Text style={styles.sharedAvatarLabel}>{initial}</Text>
+                      </View>
+                    );
+                  })}
+                  {task.sharedWith.length > 2 ? (
+                    <View
+                      style={[styles.sharedAvatar, styles.sharedAvatarMore]}
+                    >
+                      <Text style={styles.sharedAvatarLabel}>
+                        +{task.sharedWith.length - 2}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={styles.cardTag}>
+                  {task.sharedWith.length > 0 ? "SHARED" : "PRIVATE"}
+                </Text>
+              </View>
+            </View>
+          </Pressable>
+        ))}
+
+        {filteredTasks.length === 0 ? (
+          <Text style={styles.emptyText}>No hay tareas para este filtro.</Text>
+        ) : null}
+      </ScrollView>
+
+      <Pressable
+        onPress={() =>
+          router.push({ pathname: "/task/[id]", params: { id: "new" } })
+        }
+        style={styles.fab}
+      >
+        <Ionicons name="add" size={42} color={palette.background} />
+      </Pressable>
+
+      <Animated.View
+        pointerEvents={isSheetOpen ? "auto" : "none"}
+        style={[styles.backdrop, backdropStyle]}
+      >
+        <Pressable style={styles.flex} onPress={closeFilterSheet} />
+      </Animated.View>
+
+      <Animated.View
+        style={[styles.bottomSheet, sheetStyle]}
+        onLayout={(event) => {
+          sheetHeight.value = event.nativeEvent.layout.height;
+        }}
+      >
+        <View style={styles.sheetHandle} />
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>Filter Tasks</Text>
+          <Pressable onPress={closeFilterSheet} style={styles.sheetCloseButton}>
+            <Ionicons name="close" size={32} color={palette.textMuted} />
+          </Pressable>
+        </View>
+
+        <View style={styles.sheetOptions}>
+          {FILTER_OPTIONS.map((option) => {
+            const selected = draftFilter === option.value;
+            return (
+              <Pressable
+                key={option.value}
+                onPress={() => setDraftFilter(option.value)}
+                style={styles.sheetOptionCard}
+              >
+                <View style={styles.sheetOptionIcon}>
+                  <Ionicons
+                    name={option.icon}
+                    size={25}
+                    color={palette.accent}
+                  />
+                </View>
+                <View style={styles.sheetOptionTextWrap}>
+                  <Text style={styles.sheetOptionTitle}>{option.title}</Text>
+                  <Text style={styles.sheetOptionDescription}>
+                    {option.description}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.sheetRadio,
+                    selected && styles.sheetRadioSelected,
+                  ]}
+                >
+                  {selected ? <View style={styles.sheetRadioDot} /> : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.sheetActions}>
+          <Pressable
+            onPress={() => setDraftFilter("all")}
+            style={styles.resetButton}
+          >
+            <Text style={styles.resetButtonLabel}>Reset</Text>
+          </Pressable>
+          <Pressable onPress={applyFilter} style={styles.applyButton}>
+            <Text style={styles.applyButtonLabel}>Apply Filter</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+function createStyles(
+  palette: (typeof AppPalette)[keyof typeof AppPalette],
+  textSizes: typeof TextSizes,
+) {
+  return StyleSheet.create({
+    flex: { flex: 1 },
+    container: {
+      flex: 1,
+      paddingHorizontal: 16,
+      paddingTop: 18,
+      backgroundColor: palette.background,
+    },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    headerActions: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    roundAction: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: palette.surfaceAlt,
+    },
+    title: {
+      fontSize: textSizes.display,
+      fontWeight: "700",
+      color: palette.text,
+    },
+    subtitle: {
+      marginTop: 2,
+      color: palette.textMuted,
+      fontSize: textSizes.md,
+    },
+    listContent: {
+      gap: 16,
+      paddingTop: 20,
+      paddingBottom: 120,
+    },
+    taskCard: {
+      backgroundColor: palette.surfaceAlt,
+      borderRadius: 22,
+      borderWidth: 1,
+      borderColor: palette.border,
+      padding: 18,
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 12,
+    },
+    checkbox: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      borderWidth: 1.5,
+      borderColor: palette.borderSoft,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 2,
+    },
+    checkboxDone: { backgroundColor: palette.surface },
+    taskMain: { flex: 1, gap: 8 },
+    taskTitle: {
+      fontSize: textSizes.title,
+      lineHeight: 30,
+      color: palette.text,
+      fontWeight: "600",
+    },
+    taskTitleDone: {
+      textDecorationLine: "line-through",
+      color: palette.textSubtle,
+    },
+    taskSubline: { color: palette.textMuted, fontSize: textSizes.lg },
+    cardDivider: { marginTop: 8, height: 1, backgroundColor: palette.border },
+    cardFooter: {
+      marginTop: 10,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    avatarStack: { flexDirection: "row", alignItems: "center" },
+    sharedAvatar: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      borderWidth: 1.5,
+      borderColor: palette.borderSoft,
+      backgroundColor: palette.surface,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    sharedAvatarMore: {
+      backgroundColor: palette.textSubtle,
+      marginLeft: -9,
+    },
+    sharedAvatarLabel: {
+      color: palette.text,
+      fontWeight: "700",
+      fontSize: textSizes.sm,
+    },
+    cardTag: {
+      color: palette.textMuted,
+      fontSize: textSizes.md,
+      fontWeight: "700",
+      letterSpacing: 0.4,
+    },
+    emptyText: {
+      color: palette.textMuted,
+      textAlign: "center",
+      marginTop: 28,
+      fontSize: textSizes.md,
+    },
+    fab: {
+      position: "absolute",
+      right: 22,
+      bottom: 26,
+      width: 92,
+      height: 92,
+      borderRadius: 46,
+      backgroundColor: palette.accentStrong,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: palette.accentStrong,
+      shadowOpacity: 0.45,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 8,
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "#020617",
+    },
+    bottomSheet: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      backgroundColor: palette.background,
+      borderTopWidth: 1,
+      borderColor: palette.border,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 24,
+      gap: 16,
+      zIndex: 11,
+    },
+    sheetHandle: {
+      width: 90,
+      height: 10,
+      borderRadius: 999,
+      backgroundColor: palette.textSubtle,
+      alignSelf: "center",
+    },
+    sheetHeader: {
+      marginTop: 8,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    sheetTitle: {
+      color: palette.text,
+      fontSize: 42,
+      fontWeight: "700",
+    },
+    sheetCloseButton: {
+      width: 58,
+      height: 58,
+      borderRadius: 29,
+      backgroundColor: palette.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    sheetOptions: { gap: 12 },
+    sheetOptionCard: {
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: palette.borderSoft,
+      backgroundColor: palette.surface,
+      padding: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    sheetOptionIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 14,
+      backgroundColor: palette.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    sheetOptionTextWrap: { flex: 1, gap: 2 },
+    sheetOptionTitle: {
+      color: palette.text,
+      fontSize: textSizes.xl,
+      fontWeight: "700",
+    },
+    sheetOptionDescription: {
+      color: palette.textMuted,
+      fontSize: textSizes.md,
+    },
+    sheetRadio: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      borderWidth: 1.8,
+      borderColor: palette.borderSoft,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    sheetRadioSelected: { borderColor: palette.accent },
+    sheetRadioDot: {
+      width: 13,
+      height: 13,
+      borderRadius: 6.5,
+      backgroundColor: palette.accent,
+    },
+    sheetActions: {
+      borderTopWidth: 1,
+      borderTopColor: palette.border,
+      paddingTop: 16,
+      flexDirection: "row",
+      gap: 12,
+    },
+    resetButton: {
+      flex: 1,
+      borderRadius: 18,
+      backgroundColor: palette.surfaceAlt,
+      minHeight: 64,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    resetButtonLabel: {
+      color: palette.text,
+      fontSize: textSizes.xl,
+      fontWeight: "700",
+    },
+    applyButton: {
+      flex: 2,
+      borderRadius: 18,
+      backgroundColor: palette.accent,
+      minHeight: 64,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: palette.accent,
+      shadowOpacity: 0.28,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
+    },
+    applyButtonLabel: {
+      color: palette.background,
+      fontSize: textSizes.xl,
+      fontWeight: "800",
+    },
+  });
+}
