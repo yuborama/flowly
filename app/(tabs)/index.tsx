@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -52,12 +52,26 @@ export default function DashboardScreen() {
   const styles = createStyles(palette, textSizes);
 
   const friends = useAppStore((state) => state.friends);
-  const filteredTasks = useAppStore((state) => state.filteredTasks());
+  const tasks = useAppStore((state) => state.tasks);
   const currentFilter = useAppStore((state) => state.taskFilter);
   const setTaskFilter = useAppStore((state) => state.setTaskFilter);
   const toggleTask = useAppStore((state) => state.toggleTask);
   const syncFromApi = useAppStore((state) => state.syncFromApi);
   const isSyncing = useAppStore((state) => state.isSyncing);
+
+  const filteredTasks = useMemo(() => {
+    switch (currentFilter) {
+      case "completed":
+        return tasks.filter((task) => task.completed);
+      case "pending":
+        return tasks.filter((task) => !task.completed);
+      case "shared":
+        return tasks.filter((task) => task.sharedWith.length > 0);
+      case "all":
+      default:
+        return tasks;
+    }
+  }, [currentFilter, tasks]);
 
   const [draftFilter, setDraftFilter] = useState<TaskFilter>(currentFilter);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
