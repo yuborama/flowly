@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -14,6 +15,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+import { TaskCameraModal } from "@/components/TaskCameraModal";
 import { AppPalette, TextSizes } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useAppStore } from "@/store/app-store";
@@ -44,7 +46,9 @@ export default function TaskDetailScreen() {
   const [completed, setCompleted] = useState(false);
   const [priority, setPriority] = useState<Priority>("medium");
   const [sharedWith, setSharedWith] = useState<string[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [cameraVisible, setCameraVisible] = useState(false);
 
   useEffect(() => {
     if (selectedTask) {
@@ -53,6 +57,7 @@ export default function TaskDetailScreen() {
       setCompleted(selectedTask.completed);
       setPriority(selectedTask.priority ?? "medium");
       setSharedWith(selectedTask.sharedWith);
+      setPhotoUrls(selectedTask.photoUrls ?? []);
       return;
     }
 
@@ -62,6 +67,7 @@ export default function TaskDetailScreen() {
       setSharedWith([]);
       setDescription("");
       setPriority("medium");
+      setPhotoUrls([]);
     }
   }, [isCreateMode, selectedTask]);
 
@@ -84,6 +90,10 @@ export default function TaskDetailScreen() {
     setSharedWith(friends.map((friend) => friend.id));
   };
 
+  const removePhoto = (uri: string) => {
+    setPhotoUrls((current) => current.filter((item) => item !== uri));
+  };
+
   const handleSave = async () => {
     const cleanTitle = title.trim();
     if (!cleanTitle) {
@@ -100,7 +110,7 @@ export default function TaskDetailScreen() {
           priority,
           completed,
           sharedWith,
-          photoUrls: [],
+          photoUrls,
         });
       } else if (selectedTask) {
         await updateTask(selectedTask.id, {
@@ -110,7 +120,7 @@ export default function TaskDetailScreen() {
           priority,
           completed,
           sharedWith,
-          photoUrls: selectedTask.photoUrls ?? [],
+          photoUrls,
         });
       }
       router.back();
@@ -166,6 +176,7 @@ export default function TaskDetailScreen() {
             textAlignVertical="top"
             scrollEnabled
           />
+
           <View>
             <View style={styles.descriptionRow}>
               <Ionicons
@@ -204,6 +215,7 @@ export default function TaskDetailScreen() {
               <Text style={styles.completedLabel}>Mark as completed</Text>
             </Pressable>
           </View>
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>DUE DATE</Text>
             <Pressable style={styles.dueDateCard}>
@@ -220,6 +232,7 @@ export default function TaskDetailScreen() {
               />
             </Pressable>
           </View>
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>PRIORITY</Text>
             <View style={styles.priorityRow}>
@@ -300,14 +313,30 @@ export default function TaskDetailScreen() {
           </ScrollView>
 
           <View style={styles.attachRow}>
-            <Pressable style={styles.attachButtonWide}>
+            <Pressable style={styles.attachButtonWide} onPress={() => setCameraVisible(true)}>
               <Ionicons name="camera-outline" size={31} color={palette.text} />
               <Text style={styles.attachButtonLabel}>Attach Photo</Text>
             </Pressable>
-            <Pressable style={styles.attachButtonSmall}>
-              <Ionicons name="attach-outline" size={31} color={palette.text} />
+            <Pressable style={styles.attachButtonSmall} onPress={() => setPhotoUrls([])}>
+              <Ionicons name="trash-outline" size={31} color={palette.text} />
             </Pressable>
           </View>
+
+          {photoUrls.length > 0 ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>ATTACHED PHOTOS ({photoUrls.length})</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photosList}>
+                {photoUrls.map((uri) => (
+                  <View key={uri} style={styles.photoCard}>
+                    <Image source={{ uri }} style={styles.photoPreview} contentFit="cover" />
+                    <Pressable onPress={() => removePhoto(uri)} style={styles.photoRemove}>
+                      <Ionicons name="close" size={14} color={palette.background} />
+                    </Pressable>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          ) : null}
         </ScrollView>
 
         <Pressable
@@ -329,6 +358,12 @@ export default function TaskDetailScreen() {
           </Text>
         </Pressable>
       </View>
+
+      <TaskCameraModal
+        visible={cameraVisible}
+        onClose={() => setCameraVisible(false)}
+        onPhotoCaptured={(uri) => setPhotoUrls((current) => [...current, uri])}
+      />
     </SafeAreaView>
   );
 }
@@ -566,6 +601,34 @@ function createStyles(
       color: palette.text,
       fontSize: textSizes.xl,
       fontWeight: "600",
+    },
+    photosList: {
+      gap: 10,
+      paddingRight: 8,
+    },
+    photoCard: {
+      width: 96,
+      height: 96,
+      borderRadius: 10,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: palette.borderSoft,
+      position: "relative",
+    },
+    photoPreview: {
+      width: "100%",
+      height: "100%",
+    },
+    photoRemove: {
+      position: "absolute",
+      top: 4,
+      right: 4,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: palette.accent,
     },
     createButton: {
       position: "absolute",
