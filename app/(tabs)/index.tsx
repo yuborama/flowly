@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -56,6 +56,8 @@ export default function DashboardScreen() {
   const currentFilter = useAppStore((state) => state.taskFilter);
   const setTaskFilter = useAppStore((state) => state.setTaskFilter);
   const toggleTask = useAppStore((state) => state.toggleTask);
+  const syncFromApi = useAppStore((state) => state.syncFromApi);
+  const isSyncing = useAppStore((state) => state.isSyncing);
 
   const [draftFilter, setDraftFilter] = useState<TaskFilter>(currentFilter);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -116,7 +118,9 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.listContent}>
+      <ScrollView
+        contentContainerStyle={styles.listContent}
+        refreshControl={<RefreshControl refreshing={isSyncing} onRefresh={() => void syncFromApi()} />}>
         {filteredTasks.map((task) => (
           <Pressable
             key={task.id}

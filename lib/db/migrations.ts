@@ -16,5 +16,14 @@ export const flowlyMigrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 3,
+      steps: [
+        addColumns({
+          table: 'tasks',
+          columns: [{ name: 'remote_id', type: 'number', isOptional: true }],
+        }),
+      ],
+    },
   ],
 });

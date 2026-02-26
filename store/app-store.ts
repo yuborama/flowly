@@ -9,6 +9,7 @@ import {
   listTasksByOwner,
   registerUser as registerUserInDb,
   resetAllData,
+  syncTasksFromApi,
   TaskEntity,
   updateTask as updateTaskInDb,
   UserEntity,
@@ -33,6 +34,7 @@ type UpdateTaskInput = Partial<
 
 type AppState = {
   isHydrated: boolean;
+  isSyncing: boolean;
   user: UserEntity | null;
   friends: FriendEntity[];
   tasks: TaskEntity[];
@@ -46,6 +48,7 @@ type AppState = {
   setTaskFilter: (filter: TaskFilter) => void;
   filteredTasks: () => TaskEntity[];
   resetData: () => Promise<void>;
+  syncFromApi: () => Promise<void>;
 };
 
 async function loadDashboardData(userId: string) {
@@ -55,6 +58,7 @@ async function loadDashboardData(userId: string) {
 
 export const useAppStore = create<AppState>((set, get) => ({
   isHydrated: false,
+  isSyncing: false,
   user: null,
   friends: [],
   tasks: [],
@@ -73,17 +77,32 @@ export const useAppStore = create<AppState>((set, get) => ({
       return;
     }
 
-    const { friends, tasks } = await loadDashboardData(user.id);
+    const { tasks } = await loadDashboardData(user.id);
+    if (tasks.length === 0) {
+      set({ isSyncing: true });
+      try {
+        await syncTasksFromApi(user.id);
+      } finally {
+        set({ isSyncing: false });
+      }
+    }
+    const refreshed = await loadDashboardData(user.id);
     set({
       isHydrated: true,
       user,
-      friends,
-      tasks,
+      friends: refreshed.friends,
+      tasks: refreshed.tasks,
     });
   },
 
   registerUser: async (name: string) => {
     const user = await registerUserInDb(name.trim());
+    set({ isSyncing: true });
+    try {
+      await syncTasksFromApi(user.id);
+    } finally {
+      set({ isSyncing: false });
+    }
     const { friends, tasks } = await loadDashboardData(user.id);
     set({
       isHydrated: true,
@@ -164,5 +183,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       tasks: [],
       taskFilter: 'all',
     });
+  },
+
+  syncFromApi: async () => {
+    const user = get().user;
+    if (!user) {
+      return;
+    }
+    set({ isSyncing: true });
+    try {
+      await syncTasksFromApi(user.id);
+      const tasks = await listTasksByOwner(user.id);
+      set({ tasks });
+    } finally {
+      set({ isSyncing: false });
+    }
   },
 }));

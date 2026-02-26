@@ -35,6 +35,14 @@ export class TaskModel extends Model {
     this._setRaw('owner_id', value);
   }
 
+  get remoteId(): number | undefined {
+    return this._getRaw('remote_id') as number | undefined;
+  }
+
+  set remoteId(value: number | undefined) {
+    this._setRaw('remote_id', value ?? null);
+  }
+
   get dueDate(): number | undefined {
     return this._getRaw('due_date') as number | undefined;
   }

@@ -18,6 +18,7 @@ export type FriendEntity = {
 
 export type TaskEntity = {
   id: string;
+  remoteId?: number;
   title: string;
   description: string;
   dueDate?: number;
@@ -63,6 +64,7 @@ const toFriendEntity = (record: FriendModel): FriendEntity => ({
 
 const toTaskEntity = (record: TaskModel): TaskEntity => ({
   id: record.id,
+  remoteId: record.remoteId,
   title: record.title,
   description: record.description,
   dueDate: record.dueDate,
@@ -124,6 +126,7 @@ export async function listTasksByOwner(ownerId: string): Promise<TaskEntity[]> {
 }
 
 export async function addTask(input: {
+  remoteId?: number;
   title: string;
   description?: string;
   dueDate?: number;
@@ -137,6 +140,7 @@ export async function addTask(input: {
   const created = await database.write(async () => {
     return tasksCollection.create((record) => {
       record._raw.id = generateId();
+      record.remoteId = input.remoteId;
       record.title = input.title;
       record.description = input.description ?? '';
       record.completed = input.completed ?? false;
@@ -198,6 +202,55 @@ export async function updateTask(
   } catch {
     return null;
   }
+}
+
+type DummyTodosResponse = {
+  todos: {
+    id: number;
+    todo: string;
+    completed: boolean;
+  }[];
+};
+
+export async function syncTasksFromApi(ownerId: string): Promise<void> {
+  const response = await fetch('https://dummyjson.com/todos');
+  if (!response.ok) {
+    throw new Error(`Sync failed with status ${response.status}`);
+  }
+
+  const payload = (await response.json()) as DummyTodosResponse;
+
+  await database.write(async () => {
+    for (const todo of payload.todos) {
+      const existing = await tasksCollection
+        .query(Q.where('owner_id', ownerId), Q.where('remote_id', todo.id))
+        .fetch();
+
+      if (existing.length > 0) {
+        await existing[0].update((record) => {
+          record.title = todo.todo;
+          record.completed = todo.completed;
+          record.updatedAt = Date.now();
+          record.isSynced = true;
+        });
+        continue;
+      }
+
+      await tasksCollection.create((record) => {
+        record._raw.id = generateId();
+        record.remoteId = todo.id;
+        record.title = todo.todo;
+        record.description = '';
+        record.completed = todo.completed;
+        record.ownerId = ownerId;
+        record.priority = 'medium';
+        record.sharedWithRaw = '[]';
+        record.photoUrlsRaw = '[]';
+        record.updatedAt = Date.now();
+        record.isSynced = true;
+      });
+    }
+  });
 }
 
 export async function resetAllData(): Promise<void> {
