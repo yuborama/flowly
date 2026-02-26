@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export const flowlySchema = appSchema({
-  version: 1,
+  version: 2,
   tables: [
     tableSchema({
       name: 'users',
@@ -21,9 +21,13 @@ export const flowlySchema = appSchema({
       name: 'tasks',
       columns: [
         { name: 'title', type: 'string' },
+        { name: 'description', type: 'string', isOptional: true },
         { name: 'completed', type: 'boolean' },
         { name: 'owner_id', type: 'string' },
+        { name: 'due_date', type: 'number', isOptional: true },
+        { name: 'priority', type: 'string', isOptional: true },
         { name: 'shared_with', type: 'string', isOptional: true },
+        { name: 'photo_urls', type: 'string', isOptional: true },
         { name: 'attachment_uri', type: 'string', isOptional: true },
         { name: 'updated_at', type: 'number' },
         { name: 'is_synced', type: 'boolean' },

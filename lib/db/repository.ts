@@ -19,9 +19,13 @@ export type FriendEntity = {
 export type TaskEntity = {
   id: string;
   title: string;
+  description: string;
+  dueDate?: number;
+  priority: 'low' | 'medium' | 'high';
   completed: boolean;
   ownerId: string;
   sharedWith: string[];
+  photoUrls: string[];
   attachmentUri?: string;
   updatedAt: number;
   isSynced: boolean;
@@ -31,7 +35,7 @@ const usersCollection = database.get<UserModel>('users');
 const friendsCollection = database.get<FriendModel>('friends');
 const tasksCollection = database.get<TaskModel>('tasks');
 
-const parseSharedWith = (value?: string): string[] => {
+const parseStringArray = (value?: string): string[] => {
   if (!value) {
     return [];
   }
@@ -60,9 +64,13 @@ const toFriendEntity = (record: FriendModel): FriendEntity => ({
 const toTaskEntity = (record: TaskModel): TaskEntity => ({
   id: record.id,
   title: record.title,
+  description: record.description,
+  dueDate: record.dueDate,
+  priority: (record.priority as TaskEntity['priority']) ?? 'medium',
   completed: record.completed,
   ownerId: record.ownerId,
-  sharedWith: parseSharedWith(record.sharedWithRaw),
+  sharedWith: parseStringArray(record.sharedWithRaw),
+  photoUrls: parseStringArray(record.photoUrlsRaw),
   attachmentUri: record.attachmentUri,
   updatedAt: record.updatedAt,
   isSynced: record.isSynced,
@@ -117,18 +125,26 @@ export async function listTasksByOwner(ownerId: string): Promise<TaskEntity[]> {
 
 export async function addTask(input: {
   title: string;
+  description?: string;
+  dueDate?: number;
+  priority?: TaskEntity['priority'];
   ownerId: string;
   completed?: boolean;
   sharedWith?: string[];
+  photoUrls?: string[];
   attachmentUri?: string;
 }): Promise<TaskEntity> {
   const created = await database.write(async () => {
     return tasksCollection.create((record) => {
       record._raw.id = generateId();
       record.title = input.title;
+      record.description = input.description ?? '';
       record.completed = input.completed ?? false;
       record.ownerId = input.ownerId;
+      record.dueDate = input.dueDate;
+      record.priority = input.priority ?? 'medium';
       record.sharedWithRaw = JSON.stringify(input.sharedWith ?? []);
+      record.photoUrlsRaw = JSON.stringify(input.photoUrls ?? []);
       record.attachmentUri = input.attachmentUri;
       record.updatedAt = Date.now();
       record.isSynced = false;
@@ -140,7 +156,9 @@ export async function addTask(input: {
 
 export async function updateTask(
   taskId: string,
-  patch: Partial<Pick<TaskEntity, 'title' | 'completed' | 'sharedWith' | 'attachmentUri'>>
+  patch: Partial<
+    Pick<TaskEntity, 'title' | 'description' | 'dueDate' | 'priority' | 'completed' | 'sharedWith' | 'photoUrls' | 'attachmentUri'>
+  >
 ): Promise<TaskEntity | null> {
   try {
     const task = await tasksCollection.find(taskId);
@@ -150,11 +168,23 @@ export async function updateTask(
         if (patch.title !== undefined) {
           record.title = patch.title;
         }
+        if (patch.description !== undefined) {
+          record.description = patch.description;
+        }
+        if (patch.dueDate !== undefined) {
+          record.dueDate = patch.dueDate;
+        }
+        if (patch.priority !== undefined) {
+          record.priority = patch.priority;
+        }
         if (patch.completed !== undefined) {
           record.completed = patch.completed;
         }
         if (patch.sharedWith !== undefined) {
           record.sharedWithRaw = JSON.stringify(patch.sharedWith);
+        }
+        if (patch.photoUrls !== undefined) {
+          record.photoUrlsRaw = JSON.stringify(patch.photoUrls);
         }
         if (patch.attachmentUri !== undefined) {
           record.attachmentUri = patch.attachmentUri;

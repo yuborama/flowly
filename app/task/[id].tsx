@@ -49,9 +49,10 @@ export default function TaskDetailScreen() {
   useEffect(() => {
     if (selectedTask) {
       setTitle(selectedTask.title);
+      setDescription(selectedTask.description ?? "");
       setCompleted(selectedTask.completed);
+      setPriority(selectedTask.priority ?? "medium");
       setSharedWith(selectedTask.sharedWith);
-      setDescription("");
       return;
     }
 
@@ -94,16 +95,22 @@ export default function TaskDetailScreen() {
       if (isCreateMode) {
         await addTask({
           title: cleanTitle,
+          description: description.trim(),
+          dueDate: Date.now(),
+          priority,
           completed,
           sharedWith,
-          attachmentUri: description.trim() || undefined,
+          photoUrls: [],
         });
       } else if (selectedTask) {
         await updateTask(selectedTask.id, {
           title: cleanTitle,
+          description: description.trim(),
+          dueDate: selectedTask.dueDate ?? Date.now(),
+          priority,
           completed,
           sharedWith,
-          attachmentUri: description.trim() || undefined,
+          photoUrls: selectedTask.photoUrls ?? [],
         });
       }
       router.back();

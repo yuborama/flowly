@@ -18,12 +18,18 @@ export type TaskFilter = 'all' | 'completed' | 'pending' | 'shared';
 
 type AddTaskInput = {
   title: string;
+  description?: string;
+  dueDate?: number;
+  priority?: TaskEntity['priority'];
   completed?: boolean;
   sharedWith?: string[];
+  photoUrls?: string[];
   attachmentUri?: string;
 };
 
-type UpdateTaskInput = Partial<Pick<TaskEntity, 'title' | 'completed' | 'sharedWith' | 'attachmentUri'>>;
+type UpdateTaskInput = Partial<
+  Pick<TaskEntity, 'title' | 'description' | 'dueDate' | 'priority' | 'completed' | 'sharedWith' | 'photoUrls' | 'attachmentUri'>
+>;
 
 type AppState = {
   isHydrated: boolean;

@@ -11,6 +11,14 @@ export class TaskModel extends Model {
     this._setRaw('title', value);
   }
 
+  get description(): string {
+    return (this._getRaw('description') as string) ?? '';
+  }
+
+  set description(value: string) {
+    this._setRaw('description', value ?? null);
+  }
+
   get completed(): boolean {
     return this._getRaw('completed') as boolean;
   }
@@ -27,12 +35,36 @@ export class TaskModel extends Model {
     this._setRaw('owner_id', value);
   }
 
+  get dueDate(): number | undefined {
+    return this._getRaw('due_date') as number | undefined;
+  }
+
+  set dueDate(value: number | undefined) {
+    this._setRaw('due_date', value ?? null);
+  }
+
+  get priority(): string {
+    return (this._getRaw('priority') as string) ?? 'medium';
+  }
+
+  set priority(value: string) {
+    this._setRaw('priority', value);
+  }
+
   get sharedWithRaw(): string {
     return (this._getRaw('shared_with') as string) ?? '[]';
   }
 
   set sharedWithRaw(value: string) {
     this._setRaw('shared_with', value);
+  }
+
+  get photoUrlsRaw(): string {
+    return (this._getRaw('photo_urls') as string) ?? '[]';
+  }
+
+  set photoUrlsRaw(value: string) {
+    this._setRaw('photo_urls', value);
   }
 
   get attachmentUri(): string | undefined {
