@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -42,17 +43,20 @@ export default function RegisterScreen() {
       <View style={styles.topRow}>
         <Text style={styles.topTitle}>Setup Profile</Text>
         <View style={styles.helpBubble}>
-          <Ionicons name="help" size={20} color={palette.text} />
+          <Ionicons name="help" size={15} color={palette.text} />
         </View>
       </View>
 
       <View style={styles.imageSlot}>
-        <Text style={styles.imageSlotText}>Space for Illustration</Text>
+        <Image
+          source={require("@/assets/images/register.png")}
+          style={styles.image}
+          contentFit="cover"
+        />
       </View>
 
       <Text style={styles.heroTitle}>
-        Plan Together,{"\n"}
-        <Text style={styles.heroAccent}>Anywhere</Text>
+        Plan Together, <Text style={styles.heroAccent}>Anywhere</Text>
       </Text>
 
       <Text style={styles.description}>
@@ -83,7 +87,8 @@ export default function RegisterScreen() {
         ]}
       >
         <Text style={styles.buttonLabel}>
-          {isSaving ? "Saving..." : "Get Started  ->"}
+          {isSaving ? "Saving..." : "Get Started"}
+          <Ionicons name="arrow-forward" size={20} color={palette.background} />
         </Text>
       </Pressable>
 
@@ -117,6 +122,7 @@ function createStyles(
   return StyleSheet.create({
     screen: {
       flex: 1,
+      paddingTop: 30,
       backgroundColor: palette.background,
     },
     container: {
@@ -152,14 +158,14 @@ function createStyles(
       alignItems: "center",
       justifyContent: "center",
     },
-    imageSlotText: {
-      color: "#946f54",
-      fontSize: textSizes.xl,
-      fontWeight: "600",
+    image: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 24,
     },
     heroTitle: {
       marginTop: 28,
-      fontSize: 62,
+      fontSize: textSizes.h1,
       lineHeight: 68,
       textAlign: "center",
       color: palette.text,
@@ -184,26 +190,26 @@ function createStyles(
       fontWeight: "700",
     },
     inputWrap: {
-      height: 82,
-      borderRadius: 20,
+      borderRadius: 10,
       borderWidth: 1,
       borderColor: palette.border,
       backgroundColor: palette.surface,
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
       gap: 10,
     },
     input: {
       flex: 1,
       color: palette.text,
-      fontSize: 32,
+      fontSize: textSizes.lg,
       fontWeight: "500",
     },
     button: {
+      paddingVertical: 14,
       marginTop: 18,
-      height: 84,
-      borderRadius: 20,
+      borderRadius: 10,
       backgroundColor: palette.accent,
       alignItems: "center",
       justifyContent: "center",
@@ -221,7 +227,7 @@ function createStyles(
     },
     buttonLabel: {
       color: palette.background,
-      fontSize: textSizes.display,
+      fontSize: textSizes.lg,
       fontWeight: "800",
     },
     socialRow: {

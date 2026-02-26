@@ -108,10 +108,10 @@ export default function DashboardScreen() {
 
         <View style={styles.headerActions}>
           <View style={styles.roundAction}>
-            <Ionicons name="search" size={28} color={colors.text} />
+            <Ionicons name="search" size={16} color={colors.text} />
           </View>
           <Pressable onPress={openFilterSheet} style={styles.roundAction}>
-            <Ionicons name="options-outline" size={28} color={colors.text} />
+            <Ionicons name="options-outline" size={16} color={colors.text} />
           </Pressable>
         </View>
       </View>
@@ -201,7 +201,7 @@ export default function DashboardScreen() {
         }
         style={styles.fab}
       >
-        <Ionicons name="add" size={42} color={palette.background} />
+        <Ionicons name="add" size={32} color={palette.background} />
       </Pressable>
 
       <Animated.View
@@ -285,7 +285,7 @@ function createStyles(
     container: {
       flex: 1,
       paddingHorizontal: 16,
-      paddingTop: 18,
+      paddingTop: 60,
       backgroundColor: palette.background,
     },
     headerRow: {
@@ -298,15 +298,15 @@ function createStyles(
       gap: 10,
     },
     roundAction: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: palette.surfaceAlt,
     },
     title: {
-      fontSize: textSizes.display,
+      fontSize: textSizes.h1,
       fontWeight: "700",
       color: palette.text,
     },
@@ -396,9 +396,9 @@ function createStyles(
       position: "absolute",
       right: 22,
       bottom: 26,
-      width: 92,
-      height: 92,
-      borderRadius: 46,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       backgroundColor: palette.accentStrong,
       alignItems: "center",
       justifyContent: "center",
@@ -443,13 +443,13 @@ function createStyles(
     },
     sheetTitle: {
       color: palette.text,
-      fontSize: 42,
+      fontSize: textSizes.xl,
       fontWeight: "700",
     },
     sheetCloseButton: {
-      width: 58,
-      height: 58,
-      borderRadius: 29,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       backgroundColor: palette.surfaceAlt,
       alignItems: "center",
       justifyContent: "center",
@@ -466,9 +466,9 @@ function createStyles(
       gap: 12,
     },
     sheetOptionIcon: {
-      width: 52,
-      height: 52,
-      borderRadius: 14,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
       backgroundColor: palette.surfaceAlt,
       alignItems: "center",
       justifyContent: "center",
@@ -476,16 +476,16 @@ function createStyles(
     sheetOptionTextWrap: { flex: 1, gap: 2 },
     sheetOptionTitle: {
       color: palette.text,
-      fontSize: textSizes.xl,
+      fontSize: textSizes.lg,
       fontWeight: "700",
     },
     sheetOptionDescription: {
       color: palette.textMuted,
-      fontSize: textSizes.md,
+      fontSize: textSizes.sm,
     },
     sheetRadio: {
-      width: 34,
-      height: 34,
+      width: 14,
+      height: 14,
       borderRadius: 17,
       borderWidth: 1.8,
       borderColor: palette.borderSoft,
@@ -494,9 +494,9 @@ function createStyles(
     },
     sheetRadioSelected: { borderColor: palette.accent },
     sheetRadioDot: {
-      width: 13,
-      height: 13,
-      borderRadius: 6.5,
+      width: 6,
+      height: 6,
+      borderRadius: 3,
       backgroundColor: palette.accent,
     },
     sheetActions: {
@@ -510,20 +510,19 @@ function createStyles(
       flex: 1,
       borderRadius: 18,
       backgroundColor: palette.surfaceAlt,
-      minHeight: 64,
+      paddingVertical: 14,
       alignItems: "center",
       justifyContent: "center",
     },
     resetButtonLabel: {
       color: palette.text,
-      fontSize: textSizes.xl,
+      fontSize: textSizes.md,
       fontWeight: "700",
     },
     applyButton: {
       flex: 2,
       borderRadius: 18,
       backgroundColor: palette.accent,
-      minHeight: 64,
       alignItems: "center",
       justifyContent: "center",
       shadowColor: palette.accent,
@@ -534,7 +533,7 @@ function createStyles(
     },
     applyButtonLabel: {
       color: palette.background,
-      fontSize: textSizes.xl,
+      fontSize: textSizes.md,
       fontWeight: "800",
     },
   });
