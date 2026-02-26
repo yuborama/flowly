@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import { useAppStore } from "@/store/app-store";
+import { AvatarView } from "@yuborama/avatar-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 function SettingRow({
@@ -69,16 +70,15 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.container}
       >
         <View style={styles.header}>
-          <Ionicons name="chevron-back" size={38} color="#e5edf6" />
+          <View style={styles.headerSpacer} />
           <Text style={styles.headerTitle}>Settings</Text>
           <View style={styles.headerSpacer} />
         </View>
 
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarLabel}>
-              {user?.name.slice(0, 1).toUpperCase() ?? "A"}
-            </Text>
+            <AvatarView size={170} name={user?.name ?? "Alex Rivera"} />
+
             <View style={styles.editAvatar}>
               <Ionicons name="create-outline" size={20} color="#032033" />
             </View>
