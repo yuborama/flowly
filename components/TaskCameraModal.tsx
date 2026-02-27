@@ -1,8 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import {
   Camera,
   useCameraDevice,
@@ -28,10 +28,8 @@ export function TaskCameraModal(props: TaskCameraModalProps) {
   );
   const [flashMode, setFlashMode] = useState<"off" | "on">("off");
   const device = useCameraDevice(cameraPosition);
-  const {
-    hasPermission,
-    requestPermission: requestCameraPermission,
-  } = useCameraPermission();
+  const { hasPermission, requestPermission: requestCameraPermission } =
+    useCameraPermission();
 
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -81,7 +79,9 @@ export function TaskCameraModal(props: TaskCameraModalProps) {
     if (!hasPermission) {
       return (
         <View style={styles.fallback}>
-          <Text style={styles.fallbackText}>Camera permission is required.</Text>
+          <Text style={styles.fallbackText}>
+            Camera permission is required.
+          </Text>
           <Pressable
             style={styles.primaryBtn}
             onPress={() => void requestCameraPermission()}
@@ -137,12 +137,19 @@ export function TaskCameraModal(props: TaskCameraModalProps) {
         </View>
 
         <View style={styles.topBar}>
-          <Pressable onPress={closeAndReset} style={styles.iconButton}>
+          <Pressable
+            testID="camera-close-button"
+            onPress={closeAndReset}
+            style={styles.iconButton}
+          >
             <Ionicons name="close" size={32} color="#e5e7eb" />
           </Pressable>
           <Text style={styles.topTitle}>Attach to Task</Text>
           <Pressable
-            onPress={() => setFlashMode((prev) => (prev === "off" ? "on" : "off"))}
+            testID="camera-flash-toggle"
+            onPress={() =>
+              setFlashMode((prev) => (prev === "off" ? "on" : "off"))
+            }
             style={styles.iconButton}
           >
             <Ionicons
@@ -157,12 +164,17 @@ export function TaskCameraModal(props: TaskCameraModalProps) {
           <View style={styles.captureRow}>
             <View style={styles.thumbSlot}>
               {capturedUri ? (
-                <Image source={{ uri: capturedUri }} style={styles.thumbImage} contentFit="cover" />
+                <Image
+                  source={{ uri: capturedUri }}
+                  style={styles.thumbImage}
+                  contentFit="cover"
+                />
               ) : (
                 <Ionicons name="images-outline" size={30} color="#e5e7eb" />
               )}
             </View>
             <Pressable
+              testID="camera-capture-button"
               style={[styles.shutterOuter, isCapturing && styles.disabled]}
               disabled={isCapturing}
               onPress={() => void capturePhoto()}
@@ -170,24 +182,36 @@ export function TaskCameraModal(props: TaskCameraModalProps) {
               <View style={styles.shutterInner} />
             </Pressable>
             <Pressable
+              testID="camera-switch-button"
               style={styles.switchButton}
               onPress={() =>
-                setCameraPosition((prev) => (prev === "back" ? "front" : "back"))
+                setCameraPosition((prev) =>
+                  prev === "back" ? "front" : "back",
+                )
               }
             >
-              <Ionicons name="camera-reverse-outline" size={28} color="#e5e7eb" />
+              <Ionicons
+                name="camera-reverse-outline"
+                size={28}
+                color="#e5e7eb"
+              />
             </Pressable>
           </View>
 
           {capturedUri ? (
             <View style={styles.actionsRow}>
               <Pressable
+                testID="camera-retake-button"
                 style={styles.secondaryBtn}
                 onPress={() => setCapturedUri(null)}
               >
                 <Text style={styles.secondaryBtnLabel}>Retake</Text>
               </Pressable>
-              <Pressable style={styles.primaryBtn} onPress={confirmPhoto}>
+              <Pressable
+                testID="camera-use-photo-button"
+                style={styles.primaryBtn}
+                onPress={confirmPhoto}
+              >
                 <Text style={styles.primaryBtnLabel}>Use Photo</Text>
               </Pressable>
             </View>
